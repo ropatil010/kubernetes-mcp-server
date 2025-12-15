@@ -167,8 +167,16 @@ func (s *Server) reloadToolsets() error {
 	// Track previously enabled prompts
 	previousPrompts := s.enabledPrompts
 
+	// Save built-in prompts before clearing (prompts registered via init() in code)
+	// These need to be preserved across config reloads
+	builtInPrompts := prompts.ConfigPrompts()
+
 	// Load config prompts into registry
 	prompts.Clear()
+
+	// Re-register built-in prompts first
+	prompts.Register(builtInPrompts...)
+
 	if s.configuration.HasPrompts() {
 		ctx := context.Background()
 		md := s.configuration.GetPromptsMetadata()
@@ -177,7 +185,7 @@ func (s *Server) reloadToolsets() error {
 		}
 	}
 
-	// Get prompts from registry
+	// Get prompts from registry (includes both built-in and config prompts)
 	configPrompts := prompts.ConfigPrompts()
 
 	// Update enabled prompts list
